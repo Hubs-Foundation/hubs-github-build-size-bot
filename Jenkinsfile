@@ -7,13 +7,7 @@ pipeline {
     stage('build-size'){
       steps {
         writeFile(file:'payload.json', text:"${payload}")
-        echo pwd
-        sh "echo $PWD"
-        sh "ls ."
-        sh "ls bot"
-        sh "mv bot/build-size.sh ."
-        sh "mv bot/build-size.js ."
-        sh "/usr/bin/script --return -c 'sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash build-size.sh ${github_bot_token}' /dev/null" 
+        sh "/usr/bin/script --return -c 'sudo /usr/bin/hab-docker-studio -k mozillareality run /bin/bash job/build-size.sh ${github_bot_token}' /dev/null" 
       }
     }
   }
