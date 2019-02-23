@@ -1,8 +1,9 @@
-const fs = require("fs-extra");
 const path = require("path");
 const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
 
+const he = require("he");
+const fs = require("fs-extra");
 const debug = require("debug")("build-size");
 const fetch = require("node-fetch");
 const simpleGit = require("simple-git/promise");
@@ -29,7 +30,7 @@ async function measureBuild(gitPath, commit) {
   debug("collecting stats");
   const files = {};
   return new Promise(resolve => {
-    const distPath = path.join(gitPath, "dist" + path.sep);
+    const distPath = path.resolve(path.join(gitPath, "dist" + path.sep));
     klaw(distPath)
       .on("data", item => {
         if (item.stats.isDirectory()) return;
@@ -105,8 +106,6 @@ async function main() {
 
   const dataDir = "data";
   const repoPath = path.join(dataDir, repoOwner, repoName);
-  debug("script path", path.resolve(__dirname));
-  debug("repo path", path.resolve(repoPath));
   const masterPath = path.join(repoPath, "master.json");
   if (!fs.existsSync(repoPath)) {
     fs.ensureDirSync(repoPath, { recursive: true });
@@ -162,7 +161,8 @@ async function main() {
     const extFiles = files[ext];
     for (const filePath in extFiles.files) {
       const file = extFiles.files[filePath];
-      const oldSize = masterExtFiles.files[filePath].size;
+      const masterFile = masterExtFiles.files[filePath];
+      const oldSize = masterFile && masterFile.size;
       file.diff = file.size - (oldSize || 0);
     }
     for (const filePath in masterExtFiles.files) {
@@ -178,7 +178,7 @@ async function main() {
         <details>
           <summary>
             <code>
-              ${padEnd(ext, 5, "&emsp;")}
+              ${padEnd(he.encode(ext), 5, "&emsp;")}
               ${padEnd(`${files.diff > 0 ? "+" : ""}${files.diff.toLocaleString()} bytes`, 16, "&emsp;")}
             </code>
             ${files.diff > 0 ? ":arrow_up_small:" : "&emsp;"}
@@ -188,7 +188,7 @@ async function main() {
             .map(
               ([path, { diff }]) => `
                 <code>
-                  ${padEnd(path, 60, "&emsp;")}
+                  ${padEnd(he.encode(path), 60, "&emsp;")}
                   ${padEnd(`${diff > 0 ? "+" : ""}${diff.toLocaleString()} bytes`, 16, "&emsp;")}
                 </code>
                 ${diff > 0 ? ":arrow_up_small:" : "&emsp;"}
@@ -196,7 +196,6 @@ async function main() {
               `
             )
             .join("")}
-          </table>
         </details>
       `
     )
