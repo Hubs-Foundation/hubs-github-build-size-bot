@@ -105,6 +105,8 @@ async function main() {
 
   const dataDir = "data";
   const repoPath = path.join(dataDir, repoOwner, repoName);
+  debug("script path", path.resolve(__dirname));
+  debug("repo path", path.resolve(repoPath));
   const masterPath = path.join(repoPath, "master.json");
   if (!fs.existsSync(repoPath)) {
     fs.ensureDirSync(repoPath, { recursive: true });
